@@ -1,0 +1,42 @@
+Bootstrap: library
+From: ubuntu:20.04
+
+%post
+        apt-get -y update
+        apt-get -y install software-properties-common
+        add-apt-repository universe # For python3-pip
+
+        # Installing cmake
+        apt-get -y install cmake
+        
+        # Stuff needed for python
+        apt-get install --no-install-recommends -y\
+                ca-certificates  \
+                wget
+        update-ca-certificates
+
+        # Installing python
+        apt-get install -y python3\
+                python3-distutils\
+                python3-pip
+
+        mkdir -p /apps/gurobi
+        cd /apps/gurobi
+        wget https://packages.gurobi.com/9.5/gurobi9.5.1_linux64.tar.gz
+        tar -xvf gurobi9.5.1_linux64.tar.gz
+
+        unset PYTHONHOME
+        cd /apps/gurobi/gurobi951/linux64
+        python3 setup.py install
+        cd src/build
+        make
+        cp libgurobi_c++.a ../../lib/
+
+%environment
+        export GUROBI_HOME="/apps/gurobi/gurobi951/linux64"
+        export PATH=$PATH:${GUROBI_HOME}/bin
+        export LD_LIBRARY_PATH="${LD_LIBRARY_PATH}:${GUROBI_HOME}/lib"
+        export GRB_LICENSE_FILE="$GUROBI_HOME/license/gurobi.lic"
+
+%files
+        gurobi.lic /apps/gurobi/gurobi951/linux64/license/
